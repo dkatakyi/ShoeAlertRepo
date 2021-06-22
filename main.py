@@ -8,10 +8,15 @@
 #   Author: Daniel Takyi
 #   Purpose:
 ##
-import keys
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
 from difflib import SequenceMatcher
+
+
+import os
+from keys import *
+from pprint import pprint
+from airtable import Airtable
 
 def similar(a,b):
     return SequenceMatcher(None, a, b).ratio()
@@ -68,6 +73,8 @@ i = 0
 for i in range(j):
     print(foundShoes[i])
 
+airtable = Airtable(base_key, table_name, api_key)
+print(airtable)
 
 #read from database to see if still in order
 #write to csv or xml or database if not in order: the shoe, shoeprice, number of shoes
