@@ -12,11 +12,14 @@ from bs4 import BeautifulSoup
 from urllib.request import urlopen
 from difflib import SequenceMatcher
 
+from helper import *
 
 import os
+from time import sleep
 from keys import *
 from pprint import pprint
 from airtable import Airtable
+
 
 def similar(a,b):
     return SequenceMatcher(None, a, b).ratio()
@@ -30,54 +33,34 @@ type(soup)
 search_param1 = 'Jordan AJ 1'
 search_param2 = 'Jordan Retro'
 search_param3 = 'Nike Air'
-#search_param4 =
+
 
 
 ## List of available shoes that are wanted
 shoeRack = soup.find_all('span', attrs={'class': 'ProductName-primary'})
-i = 0
-checklist = []
-foundShoes = []
-for shoeBox in shoeRack:
-    shoe = shoeBox.text.strip()
-    if search_param1 in shoe:
-        print(shoe)
-        checklist.append(1)
-        foundShoes.append(shoe)
-    elif search_param2 in shoe:
-        print(shoe)
-        checklist.append(1)
-        foundShoes.append(shoe)
-    elif search_param3 in shoe:
-        print(shoe)
-        checklist.append(1)
-        foundShoes.append(shoe)
-    else:
-        checklist.append(0)
-    i += 1
+checklist, foundShoes = organizeShoes(search_param1, search_param2, search_param3, shoeRack)
+
 
 ## Find list of available wanted shoes and merge into tuple with shoe names
 shoePriceList = soup.find_all('span', attrs={'class': 'ProductPrice'})
-i = 0
-j = 0
-for shoePrice in shoePriceList:
-    if checklist[i] == 1:
-        price = shoePrice.text.strip()
-        print(price)
-        foundShoes[j] = tuple((foundShoes[j], price))
-        j += 1
-    
-    i += 1
+foundPrices = organizePrices(checklist, shoePriceList)
+shoeCatalogue = conjoin(foundShoes, foundPrices)
 
 i = 0
-for i in range(j):
-    print(foundShoes[i])
-
 airtable = Airtable(base_key, table_name, api_key)
-print(airtable)
+#for i in range(len(shoeCatalogue)):
+#    airtable.insert({'binid': i, 'name': shoeCatalogue[i][0], 'price': shoeCatalogue[i][1]})
+#    sleep(0.3)
 
-#read from database to see if still in order
-#write to csv or xml or database if not in order: the shoe, shoeprice, number of shoes
+## Compare current results with past results from database
+pages = airtable.get_iter(sort=[("binid", 'asc')])
+checkForUpdate(pages, shoeCatalogue)
+
+
+ 
+
+#read from database to see if still in order (seach records in order 1 by 1)
+#rewrite to csv or xml or database if not in order: the shoe, shoeprice, number of shoes
 
 #send me notification if not in order
 #(maybe this can be done in this script instead of a new one)
